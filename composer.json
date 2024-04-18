@@ -15,7 +15,8 @@
         "symfony/flex": "^2",
         "symfony/framework-bundle": "7.0.*",
         "symfony/runtime": "7.0.*",
-        "symfony/yaml": "7.0.*"
+        "symfony/yaml": "7.0.*",
+        "ext-simplexml": "*"
     },
     "config": {
         "allow-plugins": {
@@ -66,5 +67,8 @@
             "require": "7.0.*",
             "docker": true
         }
+    },
+    "require-dev": {
+        "symfony/maker-bundle": "^1.58"
     }
 }
