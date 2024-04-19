@@ -71,7 +71,7 @@ class GameService
             $grid = $this->world->getCells();
             $dimension = $this->world->getSquareLength();
             $this->outputGrid($grid, $dimension, $io);
-            $io->success($i);
+            $io->success((string)$i);
             sleep(1);
         }
     }

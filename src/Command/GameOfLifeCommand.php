@@ -18,7 +18,7 @@ use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 
 #[AsCommand(
     name: 'app:game-of-life',
-    description: 'Add a short description for your command',
+    description: 'Command used for running Game of life game ',
 )]
 class GameOfLifeCommand extends Command
 {
