@@ -6,8 +6,27 @@ class Cell
 {
     private int $posX;
     private int $posY;
-    private array $neighbors;
-    private ?Organism $actual = null;
+    private ?Organism $organism = null;
+
+    private array $neighbors = [];
+
+
+    public function __construct(int $posX, int $posY, ?Organism $actual = null)
+    {
+        $this->posX = $posX;
+        $this->posY = $posY;
+        $this->organism = $actual;
+    }
+
+    public function getNeighbors(): array
+    {
+        return $this->neighbors;
+    }
+
+    public function setNeighbors(array $neighbors): void
+    {
+        $this->neighbors = $neighbors;
+    }
 
     public function getPosX(): int
     {
@@ -29,23 +48,13 @@ class Cell
         $this->posY = $posY;
     }
 
-    public function getNeighbors(): array
+    public function getOrganism(): ?Organism
     {
-        return $this->neighbors;
+        return $this->organism;
     }
 
-    public function setNeighbors(array $neighbors): void
+    public function setOrganism(?Organism $organism): void
     {
-        $this->neighbors = $neighbors;
-    }
-
-    public function getActual(): ?Organism
-    {
-        return $this->actual;
-    }
-
-    public function setActual(?Organism $actual): void
-    {
-        $this->actual = $actual;
+        $this->organism = $organism;
     }
 }

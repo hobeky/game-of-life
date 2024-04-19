@@ -2,10 +2,10 @@
 
 namespace App\Command;
 
+use App\Service\GameService;
 use App\Service\OrganismFactory;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -19,16 +19,15 @@ use SimpleXMLElement;
 )]
 class GameOfLifeCommand extends Command
 {
-    private ParameterBagInterface $params;
+
 
     public function __construct(
-        ParameterBagInterface $params,
-        private readonly OrganismFactory $organismFactory
+        private readonly ParameterBagInterface $params,
+        private readonly OrganismFactory $organismFactory,
+        private readonly GameService $gameService
     )
     {
         parent::__construct();
-
-        $this->params = $params;
     }
 
     protected function configure(): void
@@ -75,9 +74,17 @@ class GameOfLifeCommand extends Command
 
         $organisms = $this->organismFactory->createFromArray($organismsArray);
 
-        dump($organisms);
+        $this->gameService->setWorldFromXmlFile(
+            $iteration,
+            $squareLength,
+            $organisms
+        );
+        $this->gameService->createCellGrid();
+        $this->gameService->initialiseOrganisms();
 
-        $io->success($organismsArray[4]);
+        $this->gameService->runSimulation($input, $output);
+
+
         $io->success('Command executed successfully.');
 
         return Command::SUCCESS;
