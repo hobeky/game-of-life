@@ -68,7 +68,7 @@ class GameService
 
         $io = new SymfonyStyle($input, $output);
         $cycles = $this->world->getMaxCycles();
-        dump($this->world->getCells());
+//        dump($this->world->getCells());
         for ($i = 0; $i < $cycles; $i++) {
             $this->simulateIteration();
             $grid = $this->world->getCells();
@@ -92,13 +92,10 @@ class GameService
             foreach ($row as $cellKey => $cell) {
                 /** @var Cell $cell */
                 if ($cell->getOrganism() instanceof Organism) {
-                    $this->ifHasLessThanTwoNeighbors();
-                    $this->ifHasTwoOrThreeNeighbors();
-                    $this->ifHasMoreThanFourNeighbors();
+                    $newGrid[$rowKey][$cellKey] = $this->ifLessThanTwoOrMoreThanFour($cell);
                 } else {
-                    $newOrganism = $this->ifEmtpyCellHasThreeNeighbors($cell);
+                    $newGrid[$rowKey][$cellKey] = $this->ifEmtpyCellHasThreeNeighbors($cell);
                 }
-                break(2);
 // DO NOT FORGET CONFLICTS
             }
         }
@@ -106,7 +103,24 @@ class GameService
         $this->world->setCells($newGrid);
     }
 
-    private function ifEmtpyCellHasThreeNeighbors(Cell $cell): ?Organism
+    private function ifLessThanTwoOrMoreThanFour(Cell $cell): Cell
+    {
+        $neighbors = $this->getNeighbors($cell);
+        $groupedNeighbors = $this->groupCellsByOrganismType($neighbors);
+
+        dump($cell->getOrganism());
+
+        if (
+            count($groupedNeighbors[$cell->getOrganism()->getName()]) > 3 ||
+            count($groupedNeighbors[$cell->getOrganism()->getName()]) < 2
+        ) {
+            $cell->setOrganism(null);
+        }
+
+        return $cell;
+    }
+
+    private function ifEmtpyCellHasThreeNeighbors(Cell $cell): Cell
     {
         $neighbors = $this->getNeighbors($cell);
         $groupedNeighbors = $this->groupCellsByOrganismType($neighbors);
@@ -124,18 +138,14 @@ class GameService
         }
 
         if (!empty($groupOfCounterNeighbor)) {
-            if(count($groupOfCounterNeighbor) <= 1) {
-                return new Organism(
-                    $groupOfCounterNeighbor[$key],
-                    $cell->getPosX(),
-                    $cell->getPosY()
-                );
-            } else {
-                dd('handle more different neigbors');
-            }
-
+            $cell->setOrganism(new Organism(
+                array_rand($groupOfCounterNeighbor),
+                $cell->getPosX(),
+                $cell->getPosY()
+            ));
         }
-        return null;
+
+        return $cell;
     }
 
     private function getNeighbors(Cell $cell): array
@@ -165,7 +175,8 @@ class GameService
 
     }
 
-    private function outputGrid(array $grid, int $dimension, SymfonyStyle $io): void
+    private
+    function outputGrid(array $grid, int $dimension, SymfonyStyle $io): void
     {
 //        dump($grid);
         $tableRows = [];
@@ -190,7 +201,8 @@ class GameService
         );
     }
 
-    private function groupCellsByOrganismType(array $neighbors): array
+    private
+    function groupCellsByOrganismType(array $neighbors): array
     {
         $groupedCells = [
             'A' => [],
