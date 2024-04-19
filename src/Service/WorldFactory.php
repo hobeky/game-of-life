@@ -12,8 +12,7 @@ class WorldFactory
         $squareLength = 10,
         $maxCycles = 10,
         $actualCycle = 0
-    ): World
-    {
+    ): World {
         return new World($cells, $organisms, $squareLength, $maxCycles, $actualCycle);
     }
 }

@@ -35,7 +35,6 @@ class GameOfLifeCommand extends Command
         $this
             ->addOption('print', null, InputOption::VALUE_NONE, 'If set, the task will print the XML file content')
             ->addArgument('file', InputArgument::OPTIONAL, 'The file to process', '/public/xml/config.xml');
-        ;
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int

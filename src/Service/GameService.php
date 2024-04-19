@@ -11,7 +11,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 class GameService
 {
     /**
-     * @var World $world
+     * @var World
      */
     private readonly World $world;
 
