@@ -28,6 +28,13 @@ with [FrankenPHP](https://frankenphp.dev) and [Caddy](https://caddyserver.com/) 
 
 **Enjoy!**
 
+## For executing game:
+- configuration file to game is stored in public/xml/config.xml (for changes)
+- executing game via command `php bin/console app:game-of-life`
+  - there is optional parameter for providing different configuration (do not forget to upload it to corresponding relative path)
+- for running code checks you can use `composer cs` => see the composer.json
+
+
 ## Docs
 
 1. [Options available](docs/options.md)

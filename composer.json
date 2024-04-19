@@ -60,8 +60,7 @@
         ],
         "cs": [
             "@ecs",
-            "@rector",
-            "@phpstan"
+            "@rector"
         ],
         "cs-fix": [
             "@ecs-fix",
