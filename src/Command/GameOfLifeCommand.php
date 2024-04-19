@@ -79,9 +79,9 @@ class GameOfLifeCommand extends Command
             $squareLength,
             $organisms
         );
-        $this->gameService->createCellGrid();
-        $this->gameService->initialiseOrganisms();
 
+        $this->gameService->createCellGrid($squareLength);
+        $this->gameService->initialiseOrganisms($organisms);
         $this->gameService->runSimulation($input, $output);
 
 

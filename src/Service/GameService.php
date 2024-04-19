@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use MongoDB\BSON\PackedArray;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
@@ -32,29 +33,32 @@ class GameService
         $this->world->setOrganisms($organism);
     }
 
-    public function createCellGrid(): void
+    public function createCellGrid($dimension): void
     {
-        $grid = [];
-        for ($x = 0; $x < 10; $x++) {
-            for ($y = 0; $y < 10; $y++) {
-                $grid[$x][$y] = new Cell($x, $y);
+        $grid = array_fill(0, $dimension, array_fill(0, $dimension, null));
+        for ($x = 0; $x < $dimension; $x++) {
+            for ($y = 0; $y < $dimension; $y++) {
+                $grid[$x][$y] = new Cell($x, $y);  // Assuming the Cell constructor can handle just coordinates
             }
         }
-
         $this->world->setCells($grid);
     }
 
-    public function initialiseOrganisms()
+    public function initialiseOrganisms($organisms)
     {
         $cells = $this->world->getCells();
         $organisms = $this->world->getOrganisms();
 
-        foreach ($organisms as $organism) {
-            $x = $organism->getPosX();
-            $y = $organism->getPosY();
+        foreach ($organisms as $oneOganism) {
+            $x = $oneOganism->getPosX();
+            $y = $oneOganism->getPosY();
+            $name = $oneOganism->getName();
+
+
+            $objectOrganism = new Organism($name, $x, $y);
 
             if (isset($cells[$x][$y])) {
-                $cells[$x][$y]->setOrganism($organism);
+                $cells[$x][$y]->setOrganism($objectOrganism);
             }
         }
     }
@@ -64,59 +68,117 @@ class GameService
 
         $io = new SymfonyStyle($input, $output);
         $cycles = $this->world->getMaxCycles();
+        dump($this->world->getCells());
         for ($i = 0; $i < $cycles; $i++) {
-            dump($this->world->getCells());
-            $this->simulateIteration();  // Simulate one iteration
-            dump($this->world->getCells());
-            $grid = $this->world->getCells();  // Get the updated grid state after the iteration
-            $dimension = $this->world->getSquareLength();  // Ensure dimension is still accurate
+            $this->simulateIteration();
+            $grid = $this->world->getCells();
+            $dimension = $this->world->getSquareLength();
 //            dump($grid);
-            $this->outputGrid($grid, $dimension, $io);  // Output the current state of the grid
+            $this->outputGrid($grid, $dimension, $io);
             $io->success($i);
-            sleep(1);  // Wait for 1 second before the next iteration
+            sleep(1);
         }
     }
 
+//    tu sa zmenia cell na null
     public function simulateIteration()
     {
-        $dimension = $this->world->getSquareLength();
+        $squareLength = $this->world->getSquareLength();
         $currentGrid = $this->world->getCells();
-        $newGrid = array_fill(0, $dimension, array_fill(0, $dimension, null));
+//        dump($currentGrid);
+        $newGrid = array_fill(0, $squareLength, array_fill(0, $squareLength, null));
 
-        for ($x = 0; $x < $dimension; $x++) {
-            for ($y = 0; $y < $dimension; $y++) {
-                $currentCell = $currentGrid[$x][$y];
-                $currentOrganism = $currentCell->getOrganism();
-                $neighbors = $currentCell->getNeighbors();
-                $cellsByType = $this->groupCellsByOrganismType($neighbors);
-
-                if ($currentOrganism !== null) {
-                    $sameTypeCells = $cellsByType[$currentOrganism->getName()] ?? [];
-                    if (count($sameTypeCells) == 2 || count($sameTypeCells) == 3) {
-                        $newGrid[$x][$y] = new Cell($x, $y, clone $currentOrganism);
-                    }
+        foreach ($currentGrid as $rowKey => $row) {
+            foreach ($row as $cellKey => $cell) {
+                /** @var Cell $cell */
+                if ($cell->getOrganism() instanceof Organism) {
+                    $this->ifHasLessThanTwoNeighbors();
+                    $this->ifHasTwoOrThreeNeighbors();
+                    $this->ifHasMoreThanFourNeighbors();
                 } else {
-                    foreach (['A', 'B', 'C'] as $type) {
-                        if (count($cellsByType[$type]) == 3) {
-                            $newGrid[$x][$y] = new Cell($x, $y, new Organism($type, $x, $y));
-                            break;
-                        }
-                    }
+                    $newOrganism = $this->ifEmtpyCellHasThreeNeighbors($cell);
                 }
+                break(2);
+// DO NOT FORGET CONFLICTS
             }
         }
 
         $this->world->setCells($newGrid);
     }
 
+    private function ifEmtpyCellHasThreeNeighbors(Cell $cell): ?Organism
+    {
+        $neighbors = $this->getNeighbors($cell);
+        $groupedNeighbors = $this->groupCellsByOrganismType($neighbors);
+        $groupOfCounterNeighbor = [
+            'A' => sizeof($groupedNeighbors['A']),
+            'B' => sizeof($groupedNeighbors['B']),
+            'C' => sizeof($groupedNeighbors['C'])
+        ];
+
+
+        foreach ($groupOfCounterNeighbor as $key => $typeOrganismGroup) {
+            if ($typeOrganismGroup !== 3) {
+                unset($groupOfCounterNeighbor[$key]);
+            }
+        }
+
+        if (!empty($groupOfCounterNeighbor)) {
+            if(count($groupOfCounterNeighbor) <= 1) {
+                return new Organism(
+                    $groupOfCounterNeighbor[$key],
+                    $cell->getPosX(),
+                    $cell->getPosY()
+                );
+            } else {
+                dd('handle more different neigbors');
+            }
+
+        }
+        return null;
+    }
+
+    private function getNeighbors(Cell $cell): array
+    {
+        $neighbors = [];
+        $neighborOffset = [
+            ['x' => +1, 'y' => +1],
+            ['x' => +1, 'y' => 0],
+            ['x' => +1, 'y' => -1],
+            ['x' => -1, 'y' => +1],
+            ['x' => -1, 'y' => 0],
+            ['x' => -1, 'y' => -1],
+            ['x' => 0, 'y' => +1],
+            ['x' => 0, 'y' => -1]
+        ];
+        $mapGrid = $this->world->getCells();
+        $posX = $cell->getPosX();
+        $posY = $cell->getPosY();
+
+        foreach ($neighborOffset as $offset) {
+            if (isset($mapGrid[$posX + $offset['x']][$posY + $offset['y']])) {
+                $neighbors[] = $mapGrid[$posX + $offset['x']][$posY + $offset['y']];
+            }
+        }
+
+        return $neighbors;
+
+    }
+
     private function outputGrid(array $grid, int $dimension, SymfonyStyle $io): void
     {
+//        dump($grid);
         $tableRows = [];
         for ($x = 0; $x < $dimension; $x++) {
             $row = [];
             for ($y = 0; $y < $dimension; $y++) {
-                $organism = $grid[$x][$y]->getOrganism();
-                $row[] = $organism ? $organism->getType() : '.';
+                $cell = $grid[$x][$y];
+                $organism = null;
+                if ($cell !== null) {
+                    $organism = $grid[$x][$y]->getOrganism();
+                }
+
+                $row[] = $organism ? $organism->getName() : '.';
             }
             $tableRows[] = $row;
         }
@@ -138,8 +200,8 @@ class GameService
 
         foreach ($neighbors as $neighbor) {
             $organism = $neighbor->getOrganism();
-            if ($organism !== null) {
-                $type = $organism->getType();
+            if ($organism instanceof Organism) {
+                $type = $organism->getName();
                 if (isset($groupedCells[$type])) {
                     $groupedCells[$type][] = $neighbor;
                 }
