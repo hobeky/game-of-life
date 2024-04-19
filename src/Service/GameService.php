@@ -1,8 +1,9 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Service;
 
-use MongoDB\BSON\PackedArray;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
@@ -12,18 +13,13 @@ class GameService
     /**
      * @var World The world object that this service manages.
      */
-    private World $world;
+    private readonly World $world;
 
-    private SymfonyStyle $io;
+    private readonly SymfonyStyle $io;
 
     public function __construct()
     {
         $this->world = (new WorldFactory())->createWorld();
-    }
-
-    public function getWorld(): World
-    {
-        return $this->world;
     }
 
     public function setWorldFromXmlFile(int $maxCycles, int $squareLength, array $organism)
@@ -38,7 +34,7 @@ class GameService
         $grid = array_fill(0, $dimension, array_fill(0, $dimension, null));
         for ($x = 0; $x < $dimension; $x++) {
             for ($y = 0; $y < $dimension; $y++) {
-                $grid[$x][$y] = new Cell($x, $y);  // Assuming the Cell constructor can handle just coordinates
+                $grid[$x][$y] = new Cell($x, $y);
             }
         }
         $this->world->setCells($grid);
@@ -54,7 +50,6 @@ class GameService
             $y = $oneOganism->getPosY();
             $name = $oneOganism->getName();
 
-
             $objectOrganism = new Organism($name, $x, $y);
 
             if (isset($cells[$x][$y])) {
@@ -63,29 +58,25 @@ class GameService
         }
     }
 
-    public function runSimulation(InputInterface $input, OutputInterface $output)
+    public function runSimulation(InputInterface $input, OutputInterface $output): void
     {
-
         $io = new SymfonyStyle($input, $output);
         $cycles = $this->world->getMaxCycles();
-//        dump($this->world->getCells());
         for ($i = 0; $i < $cycles; $i++) {
             $this->simulateIteration();
             $grid = $this->world->getCells();
             $dimension = $this->world->getSquareLength();
-//            dump($grid);
             $this->outputGrid($grid, $dimension, $io);
             $io->success($i);
             sleep(1);
         }
     }
 
-//    tu sa zmenia cell na null
-    public function simulateIteration()
+    //    tu sa zmenia cell na null
+    public function simulateIteration(): void
     {
         $squareLength = $this->world->getSquareLength();
         $currentGrid = $this->world->getCells();
-//        dump($currentGrid);
         $newGrid = array_fill(0, $squareLength, array_fill(0, $squareLength, null));
 
         foreach ($currentGrid as $rowKey => $row) {
@@ -96,7 +87,6 @@ class GameService
                 } else {
                     $newGrid[$rowKey][$cellKey] = $this->ifEmtpyCellHasThreeNeighbors($cell);
                 }
-// DO NOT FORGET CONFLICTS
             }
         }
 
@@ -107,8 +97,6 @@ class GameService
     {
         $neighbors = $this->getNeighbors($cell);
         $groupedNeighbors = $this->groupCellsByOrganismType($neighbors);
-
-        dump($cell->getOrganism());
 
         if (
             count($groupedNeighbors[$cell->getOrganism()->getName()]) > 3 ||
@@ -130,14 +118,13 @@ class GameService
             'C' => sizeof($groupedNeighbors['C'])
         ];
 
-
         foreach ($groupOfCounterNeighbor as $key => $typeOrganismGroup) {
             if ($typeOrganismGroup !== 3) {
                 unset($groupOfCounterNeighbor[$key]);
             }
         }
 
-        if (!empty($groupOfCounterNeighbor)) {
+        if (! empty($groupOfCounterNeighbor)) {
             $cell->setOrganism(new Organism(
                 array_rand($groupOfCounterNeighbor),
                 $cell->getPosX(),
@@ -172,13 +159,10 @@ class GameService
         }
 
         return $neighbors;
-
     }
 
-    private
-    function outputGrid(array $grid, int $dimension, SymfonyStyle $io): void
+    private function outputGrid(array $grid, int $dimension, SymfonyStyle $io): void
     {
-//        dump($grid);
         $tableRows = [];
         for ($x = 0; $x < $dimension; $x++) {
             $row = [];
@@ -201,8 +185,7 @@ class GameService
         );
     }
 
-    private
-    function groupCellsByOrganismType(array $neighbors): array
+    private function groupCellsByOrganismType(array $neighbors): array
     {
         $groupedCells = [
             'A' => [],

@@ -1,21 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Service;
 
 class Cell
 {
-    private int $posX;
-    private int $posY;
-    private ?Organism $organism = null;
-
     private array $neighbors = [];
 
-
-    public function __construct(int $posX, int $posY, ?Organism $actual = null)
-    {
-        $this->posX = $posX;
-        $this->posY = $posY;
-        $this->organism = $actual;
+    public function __construct(
+        private int $posX,
+        private int $posY,
+        private ?Organism $organism = null
+    ) {
     }
 
     public function getNeighbors(): array

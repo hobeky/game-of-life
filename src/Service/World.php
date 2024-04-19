@@ -1,43 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Service;
 
 class World
 {
     /**
-     * @var Cell[]
-     */
-    private array $cells;
-
-    /**
-     * @var Organism[]
-     */
-    private array $organisms;
-    private int $squareLength;
-    private int $maxCycles;
-    private int $actualCycle;
-
-
-    /**
-     * @param array $cells
      * @param Cell[] $organisms
-     * @param int $squareLength
-     * @param int $maxCycles
-     * @param int $actualCycle
      */
     public function __construct(
-        ?array $cells = [],
-        ?array $organisms = [],
-        ?int $squareLength = 0,
-        ?int $maxCycles = 0,
-        ?int $actualCycle = 0
-    )
-    {
-        $this->cells = $cells;
-        $this->organisms = $organisms;
-        $this->squareLength = $squareLength;
-        $this->maxCycles = $maxCycles;
-        $this->actualCycle = $actualCycle;
+        private array $cells = [],
+        private array $organisms = [],
+        private int $squareLength = 0,
+        private int $maxCycles = 0,
+        private int $actualCycle = 0
+    ) {
     }
 
     /**
@@ -49,7 +27,7 @@ class World
     }
 
     /**
-     * @param Cell[] $cell
+     * @param Cell[] $cells
      */
     public function setCells(array $cells): void
     {
@@ -72,8 +50,6 @@ class World
     {
         $this->organisms = $organisms;
     }
-
-
 
     public function getSquareLength(): int
     {

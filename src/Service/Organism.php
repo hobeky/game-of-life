@@ -1,14 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Service;
 
 class Organism extends AbstractOrganism implements OrganismInterface
 {
-    private string $name;
-
-    public function __construct(string $name, int $posX, int $posY)
-    {
-        $this->name = $name;
+    public function __construct(
+        private string $name,
+        int $posX,
+        int $posY
+    ) {
         $this->posX = $posX;
         $this->posY = $posY;
     }

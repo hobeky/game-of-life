@@ -1,17 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Command;
 
 use App\Service\GameService;
 use App\Service\OrganismFactory;
+use SimpleXMLElement;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
-use SimpleXMLElement;
 
 #[AsCommand(
     name: 'app:game-of-life',
@@ -19,14 +22,11 @@ use SimpleXMLElement;
 )]
 class GameOfLifeCommand extends Command
 {
-
-
     public function __construct(
         private readonly ParameterBagInterface $params,
         private readonly OrganismFactory $organismFactory,
         private readonly GameService $gameService
-    )
-    {
+    ) {
         parent::__construct();
     }
 
@@ -34,6 +34,7 @@ class GameOfLifeCommand extends Command
     {
         $this
             ->addOption('print', null, InputOption::VALUE_NONE, 'If set, the task will print the XML file content')
+            ->addArgument('file', InputArgument::OPTIONAL, 'The file to process', '/public/xml/config.xml');
         ;
     }
 
@@ -41,33 +42,21 @@ class GameOfLifeCommand extends Command
     {
         $io = new SymfonyStyle($input, $output);
         $projectDir = $this->params->get('kernel.project_dir');
-        $filename = $projectDir . '/public/xml/config.xml';
-        $schema = $projectDir . '/public/xml/config.xsd'; // Path to your XSD file
+        $filename = $projectDir . $input->getArgument('file');
 
-        if (!file_exists($filename)) {
+        if (! file_exists($filename)) {
             $io->error(sprintf('The file "%s" does not exist.', $filename));
             return Command::FAILURE;
         }
 
         $xmlContent = new SimpleXMLElement(file_get_contents($filename), 0, false);
-
-        // Validate the XML against the schema
-//        if (!$xmlContent->schemaValidate($schema)) {
-//            $io->error('XML validation failed.');
-//            return Command::FAILURE;
-//        }
-
-        $io->success('XML file loaded and validated successfully.');
-
-        // Extracting values
-        $squareLength = (string) $xmlContent->world->dimension;
-        $speciesCount = (string) $xmlContent->world->speciesCount;
+        $squareLength = (int) $xmlContent->world->dimension;
         $iteration = (int) $xmlContent->world->iterationsCount;
         $organismsArray = [];
         foreach ($xmlContent->organisms->organism as $organism) {
             $organismsArray[] = [
-                'x_pos'   => (int) $organism->x_pos,
-                'y_pos'   => (int) $organism->y_pos,
+                'x_pos' => (int) $organism->x_pos,
+                'y_pos' => (int) $organism->y_pos,
                 'species' => (string) $organism->species
             ];
         }
@@ -83,7 +72,6 @@ class GameOfLifeCommand extends Command
         $this->gameService->createCellGrid($squareLength);
         $this->gameService->initialiseOrganisms($organisms);
         $this->gameService->runSimulation($input, $output);
-
 
         $io->success('Command executed successfully.');
 

@@ -1,10 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Service;
 
 abstract class AbstractOrganism
 {
     protected int $posX;
+
     protected int $posY;
 
     public function getPosX(): int
@@ -26,6 +29,4 @@ abstract class AbstractOrganism
     {
         $this->posY = $posY;
     }
-
-
 }
