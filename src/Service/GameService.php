@@ -11,7 +11,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 class GameService
 {
     /**
-     * @var World The world object that this service manages.
+     * @var World $world
      */
     private readonly World $world;
 
@@ -22,14 +22,14 @@ class GameService
         $this->world = (new WorldFactory())->createWorld();
     }
 
-    public function setWorldFromXmlFile(int $maxCycles, int $squareLength, array $organism)
+    public function setWorldFromXmlFile(int $maxCycles, int $squareLength, array $organism): void
     {
         $this->world->setMaxCycles($maxCycles);
         $this->world->setSquareLength($squareLength);
         $this->world->setOrganisms($organism);
     }
 
-    public function createCellGrid($dimension): void
+    public function createCellGrid(int $dimension): void
     {
         $grid = array_fill(0, $dimension, array_fill(0, $dimension, null));
         for ($x = 0; $x < $dimension; $x++) {
@@ -40,7 +40,11 @@ class GameService
         $this->world->setCells($grid);
     }
 
-    public function initialiseOrganisms($organisms)
+    /**
+     * @param Organism[] $organisms
+     * @return void
+     */
+    public function initialiseOrganisms(array $organisms)
     {
         $cells = $this->world->getCells();
         $organisms = $this->world->getOrganisms();
@@ -72,8 +76,7 @@ class GameService
         }
     }
 
-    //    tu sa zmenia cell na null
-    public function simulateIteration(): void
+    private function simulateIteration(): void
     {
         $squareLength = $this->world->getSquareLength();
         $currentGrid = $this->world->getCells();
@@ -185,6 +188,10 @@ class GameService
         );
     }
 
+    /**
+     * @param Cell[] $neighbors
+     * @return array[]
+     */
     private function groupCellsByOrganismType(array $neighbors): array
     {
         $groupedCells = [
